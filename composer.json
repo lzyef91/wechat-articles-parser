@@ -1,0 +1,31 @@
+{
+    "name": "nldou\/wechat-articles-parser",
+    "description": "parser of wechat articles",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "luzy",
+            "email": "zhaoyang.lu@nldou.com"
+        }
+    ],
+    "require": {
+        "symfony/dom-crawler": "~4.3",
+        "symfony/css-selector": "~4.3",
+        "guzzlehttp/guzzle": "~6.3",
+        "laravel/framework": "~5.8",
+        "nldou/aliyun-oss": "dev-master"
+    },
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Nldou\\WechatArticlesParser\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nldou\\WechatArticlesParser\\ServiceProvider"
+            ]
+        }
+    }
+}
