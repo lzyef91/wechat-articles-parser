@@ -25,7 +25,7 @@ mix.stylus('src/resources/assets/stylus/voice.styl', 'src/resources/assets/css/v
     'src/resources/assets/css/voice.min.css',
     'src/resources/assets/css/link.min.css',
     'src/resources/assets/css/tools.min.css',
-  ], 'src/resources/assets/css/articles.min.css').version()
+  ], 'src/resources/assets/css/articles.min.css')
 
 // Full API
 // mix.js(src, output);
