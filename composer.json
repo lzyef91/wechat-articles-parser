@@ -19,13 +19,19 @@
     "autoload": {
         "psr-4": {
             "Nldou\\WechatArticlesParser\\": "src"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "extra": {
         "laravel": {
             "providers": [
                 "Nldou\\WechatArticlesParser\\ServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Parser": "Nldou\\WechatArticlesParser\\Facades\\Parser"
+            }
         }
     }
 }

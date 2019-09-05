@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\URL;
 use Nldou\WechatArticlesParser\Exceptions\InvalidParamsException;
 use Nldou\WechatArticlesParser\Exceptions\HttpException;
 use Nldou\AliyunOSS\Exceptions\Exception as OSSException;
+use Nldou\WechatArticlesParser\Traits\HasAssets;
 
 class Parser
 {
+    use HasAssets;
+
     protected $crawler;
     protected $client;
     protected $processElement;
@@ -34,8 +37,16 @@ class Parser
     protected $ossInternalEndPoint;
     protected $ossCdnDomain;
 
-    public function __construct($articlesAssetsDisk, $articlesDisk,
-        $ossAccessId, $ossAccessSecret, $isEnvProduction, $ossEndPoint, $ossInternalEndPoint, $ossCdnDomain = false)
+    protected $convertWeappId;
+    protected $weappToLinkRules;
+
+    protected $youzanShopId;
+    protected $enableYouzanSalesman;
+
+    public function __construct($articlesAssetsDisk, $articlesDisk, $isEnvProduction,
+        $ossAccessId, $ossAccessSecret, $ossEndPoint, $ossInternalEndPoint, $ossCdnDomain,
+        $convertWeappId, $weappToLinkRules,
+        $youzanShopId, $enableYouzanSalesman)
     {
         // 文章资源储存位置
         $this->articlesAssetsDisk = $articlesAssetsDisk;
@@ -50,6 +61,16 @@ class Parser
         $this->ossEndPoint = $ossEndPoint;
         $this->ossInternalEndPoint = $ossInternalEndPoint;
         $this->ossCdnDomain = $ossCdnDomain;
+
+        // 要转化的小程序appid
+        $this->convertWeappId = $convertWeappId;
+        // 小程序转化规则
+        $this->weappToLinkRules = $weappToLinkRules;
+
+        // 有赞店铺ID
+        $this->youzanShopId = $youzanShopId;
+        // 是否开启有赞销售员链接转化
+        $this->enableYouzanSalesman = $enableYouzanSalesman;
 
         // 请求客户端
         $this->client = new Client();
@@ -136,7 +157,7 @@ class Parser
      */
     public function process($selector = 'body')
     {
-        if (!$this->crawler instanceof Crawler) {
+        if (!$this->crawler) {
             throw new InvalidParamsException('crawler does not exist');
         }
 
@@ -245,7 +266,7 @@ class Parser
      */
     public function combineCss()
     {
-        if (!$this->crawler instanceof Crawler) {
+        if (!$this->crawler) {
             throw new InvalidParamsException('crawler does not exist');
         }
 
@@ -274,7 +295,11 @@ class Parser
         $css = implode('', $css);
 
         // 处理background路径
-        return $this->formatStyleBackgroundImage($css);
+        $css = $this->formatStyleBackgroundImage($css);
+
+        self::style($css);
+
+        return $css;
     }
 
     /**
@@ -534,14 +559,12 @@ class Parser
      *
      * @param string $url 有赞相关的链接 在域名youzan.com下
      * @param bool|string $sl 是否在链接中加入分销员id，值为字符串时返回完整推广链接，为false时返回redirect_uri参数
-     * @return string $url 推广链接或redirect_uri参数
+     * @return string|bool $url 推广链接或redirect_uri参数，非有赞链接返回false
      */
-    public static function processYouzanUrl($url, $sl = false)
+    public function convertLinkToSalesman($url, $sl = false)
     {
-        $isYouzanUrl = preg_match('/\.youzan\.com/', $url);
-
-        if ($url && $isYouzanUrl > 0) {
-            $link = $sl ? "https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id=18168297&sl={$sl}" : '';
+        if (preg_match('/\.youzan\.com/', $url) > 0) {
+            $link = $sl ? "https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id={$this->youzanShopId}&sl={$sl}" : '';
             $schema = parse_url($url, PHP_URL_SCHEME) ?? 'http';
             $host = parse_url($url, PHP_URL_HOST) ?? '';
             $path = parse_url($url, PHP_URL_PATH) ?? '';
@@ -557,7 +580,55 @@ class Parser
             return $link;
         }
 
-        return $url;
+        return false;
+    }
+
+    /**
+     * 转化小程序路径为普通链接
+     *
+     * @param string $path 小程序路径
+     * @return string|bool $url 普通链接，不满足替换规则时返回false
+     */
+    public function convertWeappPathToLink($path)
+    {
+        foreach ($this->weappToLinkRules as $rule) {
+            // 小程序path匹配规则
+            $pattern = $rule['pattern'];
+            // 替换链接
+            $link = $rule['link'];
+
+            $matches = [];
+            if (preg_match($pattern, $path, $matches) > 0) {
+                $len = count($matches);
+                if ($len > 1) {
+                    /* 提取小程序path中的参数 */
+                    $rpattern = [];
+                    $replacement = [];
+                    // 参数数量
+                    $pairs = floor(($len - 1) / 2);
+                    for ($pair = 0;$pair < $pairs;$pair++) {
+                        // 参数名
+                        $keyIndex = ($pair * 2) + 1;
+                        $key = $matches[$keyIndex];
+                        // 参数值
+                        $valueIndex = $keyIndex + 1;
+                        $value = $matches[$valueIndex];
+                        // 替换匹配
+                        $rpattern[] = '/\{'.$key.'\}/';
+                        // 替换值
+                        $replacement[] = $value;
+                    }
+                    // 提换链接中的参数表达{...}
+                    $url = preg_replace($rpattern, $replacement, $link);
+                } else {
+                    /* 无需提取小程序path中的参数 */
+                    $url = $link;
+                }
+                return $url;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -572,15 +643,47 @@ class Parser
         }
 
         $this->processElement->filter('a')->each(function($node, $i){
-            $url = $node->attr('href');
-            $isYouzanUrl = preg_match('/\.youzan\.com/', $url);
-            if ($isYouzanUrl > 0) {
-                $url = static::processYouzanUrl($url);
-                $class = $node->attr('class').' nldou_salesman_link';
+            $url = trim($node->attr('href'));
+            $class = trim($node->attr('class'));
+
+            if ($this->enableYouzanSalesman && preg_match('/\.youzan\.com/', $url) > 0) {
+                /* 转化普通链接为分销员链接 */
+                $url = $this->convertLinkToSalesman($url);
+                $class .= ' nldou_salesman_link';
+                // dom处理
                 $dom = $node->getNode(0);
                 $dom->setAttribute('href', 'javascript:void(0);');
                 $dom->setAttribute('class', $class);
                 $dom->setAttribute('nldou-salesman-redirect-uri', $url);
+            } elseif (in_array($class, ['weapp_image_link', 'weapp_text_link'])) {
+                /* 转化小程序 */
+
+                // 小程序appid
+                $appid = trim($node->attr('data-miniprogram-appid'));
+
+                if ($appid === $this->convertWeappId) {
+                    // 小程序路径
+                    $path = trim($node->attr('data-miniprogram-path'));
+                    // 转化为普通链接
+                    $url = $this->convertWeappPathToLink($path);
+
+                    if ($url) {
+                        $dom = $node->getNode(0);
+                        // 转化为分销员链接
+                        if ($this->enableYouzanSalesman && $target = $this->convertLinkToSalesman($url)) {
+                            $class .= ' nldou_weapp_salesman_link';
+                            // dom处理
+                            $dom->setAttribute('href', 'javascript:void(0);');
+                            $dom->setAttribute('class', $class);
+                            $dom->setAttribute('nldou-salesman-redirect-uri', $target);
+                        } else {
+                            $class .= ' nldou_weapp_link';
+                            // dom处理
+                            $dom->setAttribute('href', $url);
+                            $dom->setAttribute('class', $class);
+                        }
+                    }
+                }
             }
         });
 
@@ -608,9 +711,15 @@ class Parser
         });
         $bodyChildren = implode('', $bodyChildren);
 
-        return <<<BODY
+        $body = <<<BODY
         <body id="$bodyId" class="$bodyClass">$bodyChildren</id>
 BODY;
+
+        $body = $this->formatStyleBackgroundImage($body);
+
+        self::body($body);
+
+        return $body;
     }
 
     /**
@@ -622,24 +731,24 @@ BODY;
      */
     public function render($url, $title, $description)
     {
-        $css = $this->combineCss();
+        $this->crawl($url);
 
-        $body = $this->crawl($url)->process('body')->formatImages()->formatMpVoice()
+        $this->combineCss();
+
+        $this->process('body')->formatImages()->formatMpVoice()
             ->formatQQMusic()->formatTencentVideo()->formatLink()
             ->renderBody();
 
-        $body = $this->formatStyleBackgroundImage($body);
-
-        $script = '<script type="text/javascript">
-            // 文章题目
+        $script = '
+            /* 文章题目 */
             $(\'#activity_name\').html(\'{{$title}}\');
             $(\'title\').html(\'{{$title}}\');
-            // 发布时间
+            /* 发布时间 */
             $(\'#publish_time\').html(\'{{$publishTime}}\');
-            // 阅读人数
+            /* 阅读人数 */
             $(\'#js_read_area3\').show();
             $(\'#readNum3\').html(\'{{$readNum}}\')
-            // 阅读原文
+            /* 阅读原文 */
             if ($(\'#js_view_source\').length > 0) {
                 $(\'#js_view_source\').html(\'{{$viewSourceText}}\');
                 $(\'#js_view_source\').attr(\'href\', \'{!!$viewSourceUrl!!}\');
@@ -647,16 +756,35 @@ BODY;
                 var html = \'<a class="media_tool_meta meta_primary" id="js_view_source" href="{!!$viewSourceUrl!!}">{{$viewSourceText}}</a>\';
                 $(\'#js_read_area3\').before(html);
             }
-            // 跳转有赞链接
+            /* 跳转有赞链接 */
             var sls = \'{{$sls}}\';
-            $(\'.nldou_salesman_link\').click(function(){
+            $(\'.nldou_salesman_link, .nldou_weapp_salesman_link\').click(function(){
                 var redirectUri = $(this).attr(\'nldou-salesman-redirect-uri\');
-                var href = \'https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id=18168297&sl=\'+sls+\'&redirect_uri=\'+redirectUri+sls;
+                var href = \'https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id='.$this->youzanShopId.'&sl=\'+sls+\'&redirect_uri=\'+redirectUri+sls;
                 window.open(href);
             });
-        </script>';
+            /* 微信配置 */
+            wx.config(\'{!!$jssdk!!}\')
+            wx.ready(function(){
+                wx.updateAppMessageShareData({
+                    title: \'{{$title}}\',
+                    desc: \'{{$description}}\',
+                    link: \'{{$shareUrl}}\',
+                    imgUrl: \'{{$shareImageUrl}}\'
+                });
+                wx.updateTimelineShareData({
+                    title: \'{{$title}}\',
+                    link: \'{{$shareUrl}}\',
+                    imgUrl: \'{{$shareImageUrl}}\'
+                });
+                wx.hideMenuItems({
 
-        return view('salesman.article' , compact(['body', 'title', 'description', 'css', 'script']));
+                })
+            })';
+
+        self::script($script);
+
+        return view('wxarticles::article' , compact(['title', 'description']));
     }
 
     /**
