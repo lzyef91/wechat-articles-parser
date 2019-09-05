@@ -5,7 +5,7 @@ namespace Nldou\WechatArticlesParser\Traits;
 trait HasAssets
 {
     public static $headerCss = [
-        'vendor/wxarticles/css/sweetalert2.min.css',
+        'vendor/wxarticles/css/base/sweetalert2.min.css',
         'vendor/wxarticles/css/articles.min.css',
     ];
 

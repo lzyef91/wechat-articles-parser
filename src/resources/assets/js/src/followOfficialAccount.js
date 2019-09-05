@@ -9,7 +9,7 @@
             // 其他环境
             Swal.fire({
                 title: '关注能量逗公众号',
-                html: `<div><img src="/images/nldou_official_account_qrcode_258.jpg"></div>`,
+                html: `<div><img src="/vendor/wxarticles/images/nldou_official_account_qrcode_258.jpg"></div>`,
                 showCloseButton: true,
                 showConfirmButton: false
             })

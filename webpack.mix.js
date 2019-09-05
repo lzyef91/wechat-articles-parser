@@ -11,19 +11,21 @@ let mix = require('laravel-mix');
  |
  */
 
-mix.js('src/resources/js/src/video.js', 'src/resources/js/dist/video.min.js').version()
-mix.js('src/resources/js/src/mpvoice.js', 'src/resources/js/dist/mpvoice.min.js').version()
-mix.js('src/resources/js/src/qqmusic.js', 'src/resources/js/dist/qqmusic.min.js').version()
-mix.js('src/resources/js/src/followOfficialAccount.js', 'src/resources/js/dist/followOfficialAccount.min.js').version()
+mix.setPublicPath('src/resources/assets')
 
-mix.stylus('src/resources/stylus/voice.styl', 'src/resources/css/voice.min.css')
-mix.stylus('src/resources/stylus/link.styl', 'src/resources/css/link.min.css')
-mix.stylus('src/resources/stylus/tools.styl', 'src/resources/css/tools.min.css')
-mix.combine([
-    'src/resources/css/voice.min.css',
-    'src/resources/css/link.min.css',
-    'src/resources/css/tools.min.css',
-], 'src/resources/css/articles.min.css').version()
+mix.js('src/resources/assets/js/src/video.js', 'src/resources/assets/js/dist/video.min.js')
+  .js('src/resources/assets/js/src/mpvoice.js', 'src/resources/assets/js/dist/mpvoice.min.js')
+  .js('src/resources/assets/js/src/qqmusic.js', 'src/resources/assets/js/dist/qqmusic.min.js')
+  .js('src/resources/assets/js/src/followOfficialAccount.js', 'src/resources/assets/js/dist/followOfficialAccount.min.js')
+
+mix.stylus('src/resources/assets/stylus/voice.styl', 'src/resources/assets/css/voice.min.css')
+  .stylus('src/resources/assets/stylus/link.styl', 'src/resources/assets/css/link.min.css')
+  .stylus('src/resources/assets/stylus/tools.styl', 'src/resources/assets/css/tools.min.css')
+  .combine([
+    'src/resources/assets/css/voice.min.css',
+    'src/resources/assets/css/link.min.css',
+    'src/resources/assets/css/tools.min.css',
+  ], 'src/resources/assets/css/articles.min.css').version()
 
 // Full API
 // mix.js(src, output);

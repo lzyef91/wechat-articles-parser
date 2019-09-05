@@ -17,7 +17,7 @@
                     <div class="db qqmusic_bd">
                         <div class="play_area" musicid="${musicid}" audiourl="${url}">
                             <i class="icon_qqmusic_switch"></i>
-                            <img src="/salesman/images/icon_qqmusic_default.png" alt="" class="pic_qqmusic_default">
+                            <img src="/vendor/wxarticles/images/icon_qqmusic_default.png" alt="" class="pic_qqmusic_default">
                             <img src="${album}" data-musicid="36999927" class="qqmusic_thumb" alt="">
                         </div>
                         <a class="access_area">
