@@ -712,7 +712,7 @@ class Parser
         $bodyChildren = implode('', $bodyChildren);
 
         $body = <<<BODY
-        <body id="$bodyId" class="$bodyClass">$bodyChildren</id>
+        <body id="$bodyId" class="$bodyClass">$bodyChildren</body>
 BODY;
 
         $body = $this->formatStyleBackgroundImage($body);

@@ -12,17 +12,17 @@ trait HasAssets
     public static $style = [];
 
     public static $headerJs = [
-        'vendor/wxarticles/js/dist/base/jquery.min.js',
-        'vendor/wxarticles/js/dist/base/howler.min.js',
-        'vendor/wxarticles/js/dist/base/sweetalert2.min.js',
-        'vendor/wxarticles/js/dist/base/jweixin-1.4.0.min.js'
+        'vendor/wxarticles/js/base/jquery.min.js',
+        'vendor/wxarticles/js/base/howler.min.js',
+        'vendor/wxarticles/js/base/sweetalert2.min.js',
+        'vendor/wxarticles/js/base/jweixin-1.4.0.min.js'
     ];
 
     public static $footerJs = [
-        'vendor/wxarticles/js/dist/video.min.js',
-        'vendor/wxarticles/js/dist/mpvoice.min.js',
-        'vendor/wxarticles/js/dist/qqmusic.min.js',
-        'vendor/wxarticles/js/dist/followOfficialAccount.min.js',
+        'vendor/wxarticles/js/video.min.js',
+        'vendor/wxarticles/js/mpvoice.min.js',
+        'vendor/wxarticles/js/qqmusic.min.js',
+        'vendor/wxarticles/js/followOfficialAccount.min.js',
     ];
 
 

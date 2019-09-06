@@ -9,6 +9,12 @@ return [
     'https' => env('WECHAT_ARTICLES_ASSETS_HTTPS', false),
     /*
     |--------------------------------------------------------
+    | 资源url前缀
+    |--------------------------------------------------------
+    */
+    'assets_url_prefix' => env('WECHAT_ARTICLES_ASSETS_URL_PREFIX', NULL),
+    /*
+    |--------------------------------------------------------
     | 文章资源保存地址
     | 本地filesystem disk
     | 是oss地址，oss:bucket:dir
