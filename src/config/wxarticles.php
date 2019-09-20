@@ -3,28 +3,25 @@
 return [
     /*
     |--------------------------------------------------------
-    | 资源url是否开启https
+    | 本地资源url前缀
+    | 定义文章资源本地保存的filesystem disk url参数
+    | 用于helper wxarticles_asset(), 生成文章模板的js，css等静态资源url
     |--------------------------------------------------------
     */
     'https' => env('WECHAT_ARTICLES_ASSETS_HTTPS', false),
-    /*
-    |--------------------------------------------------------
-    | 资源url前缀
-    |--------------------------------------------------------
-    */
     'assets_url_prefix' => env('WECHAT_ARTICLES_ASSETS_URL_PREFIX', NULL),
     /*
     |--------------------------------------------------------
     | 文章资源保存地址
-    | 本地filesystem disk
-    | 是oss地址，oss:bucket:dir
+    | 本地保存，filesystem disk
+    | oss保存，oss:bucket:dir
     |--------------------------------------------------------
     */
     'articles_assets_disk' => env('WECHAT_ARTICLES_ASSETS_DISK', 'public'),
     /*
     |--------------------------------------------------------
     | 文章模板保存地址
-    | 本地filesystem disk
+    | 本地保存，filesystem disk
     |--------------------------------------------------------
     */
     'articles_disk' => env('WECHAT_ARTICLES_DISK', 'local'),

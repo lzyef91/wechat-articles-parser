@@ -518,19 +518,23 @@ class Parser
         }
 
         $coverurls = $this->processElement->filter('iframe.video_iframe')->each(function($node,$i){
-            // 提取vid
-            $src = $node->attr('data-src');
-            $pattern = '/(&|\?)vid=(.+)&?/';
-            $matches = [];
-            $times = preg_match($pattern, $src, $matches);
+            if ($node->attr('data-mpvid')) {
+                // 隐藏微信原生视频
+                $node->getNode(0)->setAttribute('style', 'display:none;');
+                return '';
+            } else {
+                // 提取vid
+                $src = $node->attr('data-src');
+                $pattern = '/(&|\?)vid=(.+)&?/';
+                $matches = [];
 
-            // width,height,allowfullscreen,
-            if ($times > 0) {
-                $src = "https://v.qq.com/txp/iframe/player.html?origin=https%3A%2F%2Fmp.weixin.qq.com&vid={$matches[2]}&autoplay=false&full=true&show1080p=false&isDebugIframe=false";
-                $node->getNode(0)->setAttribute('src', $src);
+                // width,height,allowfullscreen,
+                if (preg_match($pattern, $src, $matches) > 0) {
+                    $src = "https://v.qq.com/txp/iframe/player.html?origin=https%3A%2F%2Fmp.weixin.qq.com&vid={$matches[2]}&autoplay=false&full=true&show1080p=false&isDebugIframe=false";
+                    $node->getNode(0)->setAttribute('src', $src);
+                }
+                return urldecode($node->attr('data-cover'));
             }
-
-            return urldecode($node->attr('data-cover'));
         });
 
         // 下载封面
@@ -652,6 +656,7 @@ class Parser
                 $class .= ' nldou_salesman_link';
                 // dom处理
                 $dom = $node->getNode(0);
+                $dom->setAttribute('target', '');
                 $dom->setAttribute('href', 'javascript:void(0);');
                 $dom->setAttribute('class', $class);
                 $dom->setAttribute('nldou-salesman-redirect-uri', $url);
@@ -760,8 +765,7 @@ BODY;
             var sls = \'{{$sls}}\';
             $(\'.nldou_salesman_link, .nldou_weapp_salesman_link\').click(function(){
                 var redirectUri = $(this).attr(\'nldou-salesman-redirect-uri\');
-                var href = \'https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id='.$this->youzanShopId.'&sl=\'+sls+\'&redirect_uri=\'+redirectUri+sls;
-                window.open(href);
+                window.location.href = \'https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id='.$this->youzanShopId.'&sl=\'+sls+\'&redirect_uri=\'+redirectUri+sls;
             });
             /* 微信配置 */
             wx.config(\'{!!$jssdk!!}\')
@@ -778,7 +782,8 @@ BODY;
                     imgUrl: \'{{$shareImageUrl}}\'
                 });
                 wx.hideMenuItems({
-
+                    menulist: [\'menuItem:share:qq\',\'menuItem:share:weiboApp\',\'menuItem:share:facebook\',\'menuItem:share:QZone\',
+                        \'menuItem:copyUrl\', \'menuItem:openWithQQBrowser\', \'menuItem:openWithSafari\', \'menuItem:share:email\']
                 })
             })';
 
@@ -800,11 +805,12 @@ BODY;
         $view = $this->render($url, $title, $description);
 
         // 文件名
-        $filename = Str::random(4).uniqid().'.blade.php';
+        $alias = Str::random(8);
+        $filename = $alias.'.blade.php';
 
         // 保存文章模板
         Storage::disk($this->articlesDisk)->put($filename, $view->render());
 
-        return $filename;
+        return $alias;
     }
 }
