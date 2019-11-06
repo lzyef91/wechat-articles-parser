@@ -574,9 +574,9 @@ class Parser
             $path = parse_url($url, PHP_URL_PATH) ?? '';
             $query = parse_url($url, PHP_URL_QUERY);
             if ($query) {
-                $query .= $sl ? "&sls={$sl}" : "&sls=";
+                $query .= $sl ? "&sl={$sl}" : "&sl=";
             } else {
-                $query = $sl ? "sls={$sl}" : "sls=";
+                $query = $sl ? "sl={$sl}" : "sl=";
             }
             $url = "{$schema}://{$host}{$path}?{$query}";
             $url = urlencode($url);
@@ -751,8 +751,17 @@ BODY;
             /* 发布时间 */
             $(\'#publish_time\').html(\'{{$publishTime}}\');
             /* 阅读人数 */
-            $(\'#js_read_area3\').show();
-            $(\'#readNum3\').html(\'{{$readNum}}\')
+            if (\'{{$type}}\' === \'show\') {
+                $(\'#js_read_area3\').show();
+                $(\'#readNum3\').html(\'{{$readNum}}\')
+            } else if (\'{{$type}}\' === \'share\') {
+                Swal.fire({
+                    type: \'success\',
+                    title: \'专属文章生成成功\',
+                    text: \'点击右上角，分享文章给好友即可\',
+                    confirmButtonText: \'知道了\'
+                });
+            }
             /* 阅读原文 */
             if ($(\'#js_view_source\').length > 0) {
                 $(\'#js_view_source\').html(\'{{$viewSourceText}}\');
@@ -768,7 +777,7 @@ BODY;
                 window.location.href = \'https://h5.youzan.com/v2/trade/directsellerJump/jump?kdt_id='.$this->youzanShopId.'&sl=\'+sls+\'&redirect_uri=\'+redirectUri+sls;
             });
             /* 微信配置 */
-            wx.config(\'{!!$jssdk!!}\')
+            wx.config({!!$jssdk!!})
             wx.ready(function(){
                 wx.updateAppMessageShareData({
                     title: \'{{$title}}\',
