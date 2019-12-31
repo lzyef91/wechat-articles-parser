@@ -745,8 +745,10 @@ BODY;
             ->renderBody();
 
         $script = '
+            /* bug fix */
+            $(\'#js_content\').css(\'visibility\', \'visible\');
             /* 文章题目 */
-            $(\'#activity_name\').html(\'{{$title}}\');
+            $(\'#activity-name\').html(\'{{$title}}\');
             $(\'title\').html(\'{{$title}}\');
             /* 发布时间 */
             $(\'#publish_time\').html(\'{{$publishTime}}\');
