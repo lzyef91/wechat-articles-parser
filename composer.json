@@ -9,13 +9,13 @@
         }
     ],
     "require": {
-        "symfony/dom-crawler": "~4.3",
-        "symfony/css-selector": "~4.3",
-        "guzzlehttp/guzzle": "~6.3",
-        "laravel/framework": "~5.8",
-        "nldou/aliyun-oss": "dev-master"
+        "illuminate/support": "^5.8 || ^6.0 || ^7.0",
+        "symfony/dom-crawler": "^5.1",
+        "symfony/css-selector": "^5.1",
+        "guzzlehttp/guzzle": "^6.0",
+        "nldou/aliyun-oss": "^0.0.1",
+        "symfony/mime": "^5.1"
     },
-    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Nldou\\WechatArticlesParser\\": "src"
