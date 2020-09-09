@@ -13,7 +13,7 @@
         "symfony/dom-crawler": "^5.1",
         "symfony/css-selector": "^5.1",
         "guzzlehttp/guzzle": "^6.0",
-        "nldou/aliyun-oss": "^0.0.1",
+        "nldou/aliyun-oss": "^0.0.2",
         "symfony/mime": "^5.1"
     },
     "autoload": {
